@@ -151,8 +151,33 @@ exports.editCmd = (rl, id) => {
  * @param id Clave del quiz a probar.
  */
 exports.testCmd = (rl, id) => {
-    log('Probar el quiz indicado.', 'red');
-    rl.prompt();
+   // log('Probar el quiz indicado.', 'red');
+    if(typeof id === "undefined")
+    {
+        errorlog("Falta el parámetro id.");
+        rl.prompt();
+    }
+    else
+    {
+        try
+        {
+            const quiz = model.getByIndex(id);
+            rl.question(quiz.question+": ", resp=>{
+                if(resp===quiz.answer)
+                    biglog('Correcto :)', 'green');
+                else
+                    biglog('Incorrecto :(', 'red'); 
+            });
+        }
+        catch(error) {
+            errorlog(error.message);
+
+        }
+        finally
+        {
+            rl.prompt();
+        }
+    }
 };
 
 
@@ -163,8 +188,52 @@ exports.testCmd = (rl, id) => {
  * @param rl Objeto readline usado para implementar el CLI.
  */
 exports.playCmd = rl => {
-    log('Jugar.', 'red');
-    rl.prompt();
+    let score=0;
+    const numquizzes=model.count();
+    let toBeResolved=[];//Indice de preguntas sin resolver
+    //For para introducir los ID's existentes
+
+    
+    for (var i=0; i<numquizzes; i++) 
+    {
+       toBeResolved[i]=i;
+    }
+    const playOne=()=>
+    {
+      if(toBeResolved.length===0)
+      {
+           log('No hay mas preguntas que resolver.', 'blue');
+           log("Aciertos: ",'green');
+           biglog(score, 'green');
+      }
+      else
+      {
+
+           let id=Math.floor(Math.random()*toBeResolved.length);
+           let quiz=model.getByIndex(toBeResolved[id]);
+
+           rl.question(quiz.question+": ", resp=>{
+               if(resp===quiz.answer)
+               {
+                    log('Correcto :)', 'green');
+                    score++;
+                    log("Aciertos: ",'green');
+                    biglog(score, 'green');
+                    playOne();
+               }
+               else
+               {
+                    log('Incorrecto :(', 'red'); 
+                    log('Fin del examen.', 'blue');
+                    log("Aciertos: ",'green');
+                    biglog(score, 'green');
+               }
+           });
+           toBeResolved.splice(id,1);
+        }
+        rl.prompt();
+    }
+    playOne();
 };
 
 
@@ -175,8 +244,7 @@ exports.playCmd = rl => {
  */
 exports.creditsCmd = rl => {
     log('Autores de la práctica:');
-    log('Nombre 1', 'green');
-    log('Nombre 2', 'green');
+    log('Ericka Zavala', 'green');
     rl.prompt();
 };
 
